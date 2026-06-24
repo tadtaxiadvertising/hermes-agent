@@ -96,6 +96,9 @@ export interface BillingStateResponse {
   org_name: string | null
   portal_url: string | null
   role: string | null
+  // Shared dollar usage model (two-bar view), embedded by the gateway so /topup
+  // renders the same bars as /usage and /subscription from this single fetch.
+  usage?: UsageModelData
 }
 
 /**
