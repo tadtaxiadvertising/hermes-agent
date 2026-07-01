@@ -94,6 +94,11 @@ const buildSubscriptionCtx = (
       .rpc<SubscriptionStateResponse>('subscription.state', {})
       .then(r => r ?? null)
       .catch(() => null),
+  requestRemoteSpending: () =>
+    ctx.gateway
+      .rpc<BillingMutationResponse>('billing.step_up', { session_id: ctx.sid ?? undefined })
+      .then(r => !!(r && r.ok && r.granted))
+      .catch(() => false),
   resume: () =>
     ctx.gateway
       .rpc<BillingMutationResponse>('subscription.resume', {})

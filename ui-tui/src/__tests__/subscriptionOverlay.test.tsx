@@ -79,6 +79,7 @@ const ctx = {
   openPortal: vi.fn(),
   preview: vi.fn(() => Promise.resolve(null)),
   refreshState: vi.fn(() => Promise.resolve(null)),
+  requestRemoteSpending: vi.fn(() => Promise.resolve(true)),
   resume: vi.fn(() => Promise.resolve(null)),
   scheduleCancellation: vi.fn(() => Promise.resolve(null)),
   scheduleChange: vi.fn(() => Promise.resolve(null)),
@@ -159,7 +160,7 @@ describe('SubscriptionOverlay — overview', () => {
     expect(out).toContain('Manage on portal')
   })
 
-  it('downgrade-pending: shows scheduled-switch banner (formatted date)', () => {
+  it('downgrade-pending: leads with a Pro ──▶ Free banner + status echo', () => {
     const out = render(
       overlay(
         state({
@@ -169,8 +170,12 @@ describe('SubscriptionOverlay — overview', () => {
       )
     )
 
-    expect(out).toContain('Scheduled to switch to Free')
+    expect(out).toContain('Scheduled change')
+    expect(out).toContain('──▶')
+    expect(out).toContain('Free')
     expect(out).toContain('Jul 15, 2026')
+    // the status line itself echoes the transition
+    expect(out).toContain('Plan: Pro → Free')
   })
 
   it('team context: redirects to /topup, no tier picker', () => {
@@ -233,8 +238,20 @@ describe('SubscriptionOverlay — overview actions', () => {
       )
     )
 
-    expect(out).toContain('Keep current plan')
+    // undo is promoted to the first action; the banner shows the pending cancel
+    expect(out).toContain('Keep Plus (undo this change)')
+    expect(out).toContain('cancels')
     expect(out).not.toContain('Cancel subscription')
+  })
+})
+
+describe('SubscriptionOverlay — step-up', () => {
+  it('prompts to enable terminal billing (never leaks the raw scope)', () => {
+    const out = render(at('stepup', subscriber(), { stepUpRetry: { kind: 'preview', tierId: 'ultra' } }))
+
+    expect(out).toContain('Terminal billing')
+    expect(out).toContain('Enable terminal billing')
+    expect(out).not.toContain('billing:manage')
   })
 })
 

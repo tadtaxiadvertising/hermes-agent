@@ -152,7 +152,8 @@ export interface BillingOverlayState {
 
 // ── Subscription overlay (in-terminal plan change, V3) ──
 
-// A small state machine: overview → picker → confirm → result.
+// A small state machine: overview → picker → confirm → result, with a stepup
+// screen spliced in on demand.
 //   overview — plan + status, entry to the picker / resume / manage-on-portal.
 //   picker   — the tier catalog (up/down direction hints; current tier shown,
 //              not selectable).
@@ -160,7 +161,16 @@ export interface BillingOverlayState {
 //              scheduled at date / no-op / blocked) + the apply action.
 //   result   — the outcome, including an SCA/decline upgrade handed off to the
 //              portal.
-export type SubscriptionScreen = 'confirm' | 'overview' | 'picker' | 'result'
+//   stepup   — reached when a mutation returns insufficient_scope: grants the
+//              terminal-billing scope in place, then auto-replays the held action.
+export type SubscriptionScreen = 'confirm' | 'overview' | 'picker' | 'result' | 'stepup'
+
+// The action held while the stepup screen grants terminal billing, replayed on
+// grant: re-preview a tier, re-apply the confirmed pending change, or re-resume.
+export type SubscriptionStepUpRetry =
+  | { kind: 'apply' }
+  | { kind: 'preview'; tierId: string }
+  | { kind: 'resume' }
 
 export interface SubscriptionOverlayCtx {
   /** Build {portal}/manage-subscription?org_id=… locally and open it. Resolves ok/false. */
@@ -179,6 +189,12 @@ export interface SubscriptionOverlayCtx {
   resume: () => Promise<BillingMutationResponse | null>
   /** POST /upgrade: charge the card on the subscription + flip the plan now. */
   upgrade: (tierId: string, idempotencyKey?: string) => Promise<SubscriptionUpgradeResponse | null>
+  /**
+   * Run the `billing.step_up` device flow (grant terminal billing / "Remote
+   * Spending"). Resolves `true` when the grant lands. The browser opens via the
+   * gateway's out-of-band verification event — the stepup screen just awaits.
+   */
+  requestRemoteSpending: () => Promise<boolean>
   /** Emit a transcript system line. */
   sys: (text: string) => void
 }
@@ -214,6 +230,8 @@ export interface SubscriptionOverlayState {
   result?: null | SubscriptionResult
   screen: SubscriptionScreen
   state: SubscriptionStateResponse
+  /** Held while on the 'stepup' screen: the action to replay once the grant lands. */
+  stepUpRetry?: null | SubscriptionStepUpRetry
 }
 
 export interface OverlayState {
