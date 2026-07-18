@@ -54,6 +54,7 @@ htmlcov/
 
 # Documentation
 *.md
+!docker/SOUL.md.seed
 
 # Runtime data (bind-mounted at /opt/data; must not leak into build context)
 data/
