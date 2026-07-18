@@ -37,9 +37,11 @@ services:
       - TERMINAL_TIMEOUT=60
       # --- Browser: disabled (no Chromium; use cloud browser-use) ---
       - HERMES_BROWSER_DISABLED=1
-      # --- Optional: Messaging platform tokens ---
-      # - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      # - TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS}
+      # --- Messaging: Telegram (REQUIRED for Telegram integration) ---
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS:-}
+      - TELEGRAM_HOME_CHANNEL=${TELEGRAM_HOME_CHANNEL:-}
+      # --- Optional: Other messaging platforms ---
       # - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
       # - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
       # - SLACK_APP_TOKEN=${SLACK_APP_TOKEN}
