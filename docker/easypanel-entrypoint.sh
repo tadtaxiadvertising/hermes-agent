@@ -5,6 +5,7 @@ set -e
 
 HERMES_HOME="${HERMES_HOME:-/opt/data}"
 INSTALL_DIR="/opt/hermes"
+DATA_SEED="/opt/data-seed"
 
 # --- Bootstrap as root, then drop to hermes ---
 if [ "$(id -u)" = 0 ]; then
@@ -18,8 +19,10 @@ if [ "$(id -u)" = 0 ]; then
         chmod 600 "$HERMES_HOME/.env"
     fi
     if [ ! -f "$HERMES_HOME/config.yaml" ]; then
-        # Seed Easypanel-optimized config (stripped browser, local terminal, etc.)
-        if [ -f "$INSTALL_DIR/docker/easypanel-config.yaml" ]; then
+        # Seed from overlay first, then fallback to Easypanel-optimized config
+        if [ -f "$DATA_SEED/config.yaml" ]; then
+            cp "$DATA_SEED/config.yaml" "$HERMES_HOME/config.yaml"
+        elif [ -f "$INSTALL_DIR/docker/easypanel-config.yaml" ]; then
             cp "$INSTALL_DIR/docker/easypanel-config.yaml" "$HERMES_HOME/config.yaml"
         elif [ -f "$INSTALL_DIR/cli-config.yaml.example" ]; then
             cp "$INSTALL_DIR/cli-config.yaml.example" "$HERMES_HOME/config.yaml"
@@ -28,7 +31,12 @@ if [ "$(id -u)" = 0 ]; then
         chmod 640 "$HERMES_HOME/config.yaml" 2>/dev/null || true
     fi
     if [ ! -f "$HERMES_HOME/SOUL.md" ]; then
-        printf 'You are Hermes Agent, an intelligent AI assistant. You are helpful, knowledgeable, and direct.\n' > "$HERMES_HOME/SOUL.md"
+        # Seed from overlay first, then fallback to inline default
+        if [ -f "$DATA_SEED/SOUL.md" ]; then
+            cp "$DATA_SEED/SOUL.md" "$HERMES_HOME/SOUL.md"
+        else
+            printf 'You are Hermes Agent, an intelligent AI assistant. You are helpful, knowledgeable, and direct.\n' > "$HERMES_HOME/SOUL.md"
+        fi
         chown hermes:hermes "$HERMES_HOME/SOUL.md"
     fi
 

@@ -81,6 +81,12 @@ COPY . .
 RUN uv pip install --no-cache-dir --no-deps -e "." && \
     printf 'docker-easypanel\n' > /opt/hermes/.install_method
 
+# ---------- Config overlay (seeds first-boot data) ----------
+COPY docker/SOUL.md.seed /opt/data-seed/SOUL.md
+COPY docker/easypanel-config.yaml /opt/data-seed/config.yaml
+
+RUN mkdir -p /opt/data-seed && chown hermes:hermes /opt/data-seed
+
 # ---------- Runtime config ----------
 ENV HERMES_HOME=/opt/data
 ENV HERMES_WRITE_SAFE_ROOT=/opt/data
