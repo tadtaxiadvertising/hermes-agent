@@ -1,0 +1,132 @@
+{
+  "$schema": "https://easypanel.dev/schema.json",
+  "name": "Hermes Gateway",
+  "description": "Self-improving AI agent gateway — connects to LLM providers (NVIDIA, OpenRouter, etc.) and messaging platforms (Telegram, Discord, Slack). Optimized for low-resource VPS deployment.",
+  "version": "0.18.2",
+  "icon": "https://raw.githubusercontent.com/NousResearch/Hermes-Agent/main/assets/hermes-logo.png",
+  "categories": [
+    "ai",
+    "messaging",
+    "automation"
+  ],
+  "tags": [
+    "ai-agent",
+    "llm",
+    "gateway",
+    "telegram",
+    "discord",
+    "slack"
+  ],
+  "website": "https://github.com/NousResearch/Hermes-Agent",
+  "documentation": "https://github.com/NousResearch/Hermes-Agent/blob/main/README.md",
+  "license": "MIT",
+  "type": "service",
+  "build": {
+    "dockerfile": "Dockerfile.easypanel",
+    "context": "."
+  },
+  "ports": [
+    {
+      "port": 8642,
+      "protocol": "http",
+      "description": "Gateway API server (OpenAI-compatible endpoint + healthcheck)"
+    }
+  ],
+  "volumes": [
+    {
+      "name": "hermes-data",
+      "mountPath": "/opt/data",
+      "description": "Persistent data: config, sessions, memories, skills, auth"
+    }
+  ],
+  "env": {
+    "NVIDIA_API_KEY": {
+      "label": "NVIDIA API Key",
+      "description": "NVIDIA NIM API key for LLM calls (free at build.nvidia.com). Required for the default deepseek-v4-flash model.",
+      "required": true,
+      "secret": true
+    },
+    "API_SERVER_KEY": {
+      "label": "API Server Key",
+      "description": "Authentication key for the OpenAI-compatible API server endpoint. Required for remote access.",
+      "required": true,
+      "secret": true
+    },
+    "API_SERVER_HOST": {
+      "label": "API Server Host",
+      "description": "Bind address for the API server. Use 0.0.0.0 to expose externally.",
+      "default": "0.0.0.0",
+      "required": false
+    },
+    "API_SERVER_PORT": {
+      "label": "API Server Port",
+      "description": "Port for the API server.",
+      "default": "8642",
+      "required": false
+    },
+    "HERMES_GATEWAY_BOOTSTRAP_STATE": {
+      "label": "Gateway Bootstrap State",
+      "description": "Auto-start the gateway on first boot. Set to 'running' to auto-start.",
+      "default": "running",
+      "required": false
+    },
+    "TERMINAL_ENV": {
+      "label": "Terminal Backend",
+      "description": "Terminal backend: 'local' (run commands in container) or 'docker' (requires Docker socket).",
+      "default": "local",
+      "required": false
+    },
+    "HERMES_BROWSER_DISABLED": {
+      "label": "Browser Disabled",
+      "description": "Disable browser tool (no Chromium installed; use cloud browser-use instead).",
+      "default": "1",
+      "required": false
+    },
+    "TELEGRAM_BOT_TOKEN": {
+      "label": "Telegram Bot Token",
+      "description": "Telegram bot token from @BotFather. Required for Telegram integration.",
+      "required": false,
+      "secret": true
+    },
+    "TELEGRAM_ALLOWED_USERS": {
+      "label": "Telegram Allowed Users",
+      "description": "Comma-separated Telegram user IDs allowed to talk to the bot.",
+      "required": false
+    },
+    "DISCORD_BOT_TOKEN": {
+      "label": "Discord Bot Token",
+      "description": "Discord bot token. Required for Discord integration.",
+      "required": false,
+      "secret": true
+    },
+    "SLACK_BOT_TOKEN": {
+      "label": "Slack Bot Token",
+      "description": "Slack bot token (xoxb-...). Required for Slack integration.",
+      "required": false,
+      "secret": true
+    },
+    "SLACK_APP_TOKEN": {
+      "label": "Slack App Token",
+      "description": "Slack app-level token (xapp-...) for Socket Mode.",
+      "required": false,
+      "secret": true
+    }
+  },
+  "resources": {
+    "memory": {
+      "limit": "512MB",
+      "reservation": "256MB"
+    },
+    "cpu": {
+      "limit": "1.0",
+      "reservation": "0.5"
+    }
+  },
+  "healthcheck": {
+    "test": "curl -f http://localhost:8642/health",
+    "interval": "30s",
+    "timeout": "10s",
+    "startPeriod": "60s",
+    "retries": 3
+  }
+}

@@ -1,0 +1,68 @@
+# =============================================================================
+# docker-compose.easypanel.yml — Hermes Gateway for Easypanel Free Tier
+# =============================================================================
+# Strict resource limits: 512MB RAM (hard), 1024MB RAM (soft/burst).
+# Single service: gateway only (no dashboard — use CLI/API directly).
+#
+# Usage:
+#   docker compose -f docker-compose.easypanel.yml up -d
+#
+# Easypanel: Import this repo, point to Dockerfile.easypanel, and set
+# the environment variables below in the Easypanel service config.
+# =============================================================================
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.easypanel
+    image: hermes-gateway:slim
+    container_name: hermes-gateway
+    restart: unless-stopped
+    ports:
+      - "8642:8642"
+    volumes:
+      - hermes-data:/opt/data
+    environment:
+      # --- LLM Provider (NVIDIA NIM — free tier) ---
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY:?NVIDIA_API_KEY is required}
+      # --- Gateway API Server (expose beyond localhost) ---
+      - API_SERVER_HOST=0.0.0.0
+      - API_SERVER_PORT=8642
+      - API_SERVER_KEY=${API_SERVER_KEY:?API_SERVER_KEY is required for auth}
+      # --- Auto-start gateway on first boot ---
+      - HERMES_GATEWAY_BOOTSTRAP_STATE=running
+      # --- Terminal backend (local = run commands in container) ---
+      - TERMINAL_ENV=local
+      - TERMINAL_TIMEOUT=60
+      # --- Browser: disabled (no Chromium; use cloud browser-use) ---
+      - HERMES_BROWSER_DISABLED=1
+      # --- Optional: Messaging platform tokens ---
+      # - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      # - TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS}
+      # - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      # - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      # - SLACK_APP_TOKEN=${SLACK_APP_TOKEN}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+          cpus: "0.5"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8642/health" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  hermes-data:
+    driver: local

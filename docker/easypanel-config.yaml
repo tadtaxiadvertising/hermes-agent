@@ -1,0 +1,85 @@
+# =============================================================================
+# config.yaml — Easypanel-optimized Hermes Gateway Configuration
+# =============================================================================
+# This config is optimized for a low-resource VPS deployment:
+# - Browser tool disabled (no Chromium — use cloud browser-use)
+# - Terminal backend: local (commands run inside the container)
+# - Memory-compressed conversations to stay within context limits
+# - No TUI/Dashboard (access via API server or messaging platforms only)
+# =============================================================================
+
+model:
+  default: deepseek-ai/deepseek-v4-flash
+  provider: nvidia
+  base_url: https://integrate.api.nvidia.com/v1
+
+agent:
+  max_turns: 60
+  verbose: false
+  reasoning_effort: medium
+
+terminal:
+  backend: local
+  cwd: /opt/data
+  timeout: 60
+
+# Browser tool: DISABLED (no Chromium on Easypanel image).
+# Use cloud browser-use provider instead (requires BROWSERBASE_API_KEY).
+browser:
+  inactivity_timeout: 120
+  cloud_provider: browser-use
+  disabled: true
+
+# Web search: use Firecrawl cloud (requires FIRECRAWL_API_KEY)
+# or Exa (requires EXA_API_KEY) — both are lazy-installed.
+web:
+  backend: firecrawl
+
+# Compression: aggressive to keep memory usage low on constrained VPS
+compression:
+  enabled: true
+  threshold: 0.5
+  target_ratio: 0.15
+  protect_last_n: 10
+  protect_first_n: 2
+
+display:
+  compact: true
+  streaming: true
+
+# Memory: enabled but with smaller limits for resource savings
+memory:
+  memory_enabled: true
+  user_profile_enabled: true
+  memory_char_limit: 1800
+  user_char_limit: 1200
+
+# Fallback providers (free NVIDIA models — ordered by token efficiency)
+fallback_providers:
+  - provider: nvidia
+    model: stepfun-ai/step-3.7-flash
+    key_env: NVIDIA_API_KEY
+  - provider: nvidia
+    model: minimaxai/minimax-m2.7
+    key_env: NVIDIA_API_KEY
+  - provider: nvidia
+    model: deepseek-ai/deepseek-v4-flash
+    key_env: NVIDIA_API_KEY
+
+tts:
+  provider: openai
+
+stt:
+  enabled: false
+  provider: local
+
+tool_loop_guardrails:
+  warnings_enabled: true
+  hard_stop_enabled: false
+
+session_reset:
+  mode: both
+  idle_minutes: 1440
+  at_hour: 4
+
+_config_version: 33
