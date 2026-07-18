@@ -34,12 +34,13 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # - ffmpeg: audio processing (TTS/STT media)
 # - tini: lightweight PID 1 init (zombie reaping, signal forwarding)
 # - procps: process monitoring (ps for memory_monitor)
+# - gcc g++: C/C++ compilers required by cmake for python-olm (mautrix[encryption] static build)
 # - make cmake: build tools for python-olm (mautrix[encryption] static build)
 # - libolm-dev: Matrix encryption (mautrix[encryption] native dep)
-# Total: ~50MB vs ~300MB in the full image
+# Total: ~80MB vs ~300MB in the full image
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    ca-certificates curl git ffmpeg tini procps make cmake libolm-dev && \
+    ca-certificates curl git ffmpeg tini procps gcc g++ make cmake libolm-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy uv + gosu from builder stages
