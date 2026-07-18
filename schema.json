@@ -115,6 +115,18 @@
       "description": "Slack app-level token (xapp-...) for Socket Mode.",
       "required": false,
       "secret": true
+    },
+    "GITHUB_PAT": {
+      "label": "GitHub Personal Access Token",
+      "description": "GitHub PAT for cloning private repos (tadtaxiadvertising org). Enables autonomous code work on TAD projects. Generate at github.com/settings/tokens/new with repo scope.",
+      "required": false,
+      "secret": true
+    },
+    "FIRECRAWL_API_KEY": {
+      "label": "Firecrawl API Key",
+      "description": "Firecrawl cloud API key for web search/extract/crawl tasks. Get at firecrawl.dev.",
+      "required": false,
+      "secret": true
     }
   },
   "resources": {

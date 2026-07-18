@@ -6,6 +6,8 @@
 # - Terminal backend: local (commands run inside the container)
 # - Memory-compressed conversations to stay within context limits
 # - No TUI/Dashboard (access via API server or messaging platforms only)
+# - Full TAD DOOH project access via GITHUB_PAT env var
+# - Memory seeded with TAD project knowledge at deploy time
 # =============================================================================
 
 model:
@@ -21,7 +23,7 @@ agent:
 terminal:
   backend: local
   cwd: /opt/data
-  timeout: 60
+  timeout: 180
 
 # Browser tool: DISABLED (no Chromium on Easypanel image).
 # Use cloud browser-use provider instead (requires BROWSERBASE_API_KEY).
@@ -39,20 +41,22 @@ web:
 compression:
   enabled: true
   threshold: 0.5
-  target_ratio: 0.15
-  protect_last_n: 10
-  protect_first_n: 2
+  target_ratio: 0.2
+  protect_last_n: 20
+  protect_first_n: 3
 
 display:
   compact: true
   streaming: true
 
-# Memory: enabled but with smaller limits for resource savings
+# Memory: full limits to carry TAD project knowledge
 memory:
   memory_enabled: true
   user_profile_enabled: true
-  memory_char_limit: 1800
-  user_char_limit: 1200
+  memory_char_limit: 2200
+  user_char_limit: 1375
+  nudge_interval: 10
+  flush_min_turns: 6
 
 # Fallback providers (free NVIDIA models — ordered by token efficiency)
 fallback_providers:
@@ -64,6 +68,18 @@ fallback_providers:
     key_env: NVIDIA_API_KEY
   - provider: nvidia
     model: deepseek-ai/deepseek-v4-flash
+    key_env: NVIDIA_API_KEY
+  - provider: nvidia
+    model: qwen/qwen3.5-122b
+    key_env: NVIDIA_API_KEY
+  - provider: nvidia
+    model: glm-5.2
+    key_env: NVIDIA_API_KEY
+  - provider: nvidia
+    model: deepseek-ai/deepseek-v4-pro
+    key_env: NVIDIA_API_KEY
+  - provider: nvidia
+    model: nvidia/nemotron-3-ultra-550b
     key_env: NVIDIA_API_KEY
 
 tts:
@@ -87,4 +103,7 @@ platform_toolsets:
   telegram:
     - hermes-telegram
 
-_config_version: 33
+prompt_caching:
+  cache_ttl: 5m
+
+_config_version: 34

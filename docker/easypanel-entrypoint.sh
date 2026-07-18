@@ -1,11 +1,12 @@
 #!/bin/bash
 # easypanel-entrypoint.sh — Lightweight entrypoint for Easypanel deployment
-# Seeds data dir, then exec's the gateway via gosu privilege drop.
+# Seeds data dir (config, SOUL.md, memories, git config), then exec's the gateway via gosu privilege drop.
 set -e
 
 HERMES_HOME="${HERMES_HOME:-/opt/data}"
 INSTALL_DIR="/opt/hermes"
 DATA_SEED="/opt/data-seed"
+MEMORIES_SEED="/opt/memories-seed"
 
 # --- Bootstrap as root, then drop to hermes ---
 if [ "$(id -u)" = 0 ]; then
@@ -40,6 +41,29 @@ if [ "$(id -u)" = 0 ]; then
         chown hermes:hermes "$HERMES_HOME/SOUL.md"
     fi
 
+    # Seed memories (MEMORY.md and USER.md) from image seed directory
+    # Only seed if files don't already exist on the persistent volume
+    mkdir -p "$HERMES_HOME/memories"
+    if [ ! -f "$HERMES_HOME/memories/MEMORY.md" ] && [ -f "$MEMORIES_SEED/MEMORY.md" ]; then
+        cp "$MEMORIES_SEED/MEMORY.md" "$HERMES_HOME/memories/MEMORY.md"
+    fi
+    if [ ! -f "$HERMES_HOME/memories/USER.md" ] && [ -f "$MEMORIES_SEED/USER.md" ]; then
+        cp "$MEMORIES_SEED/USER.md" "$HERMES_HOME/memories/USER.md"
+    fi
+
+    # Configure git for the hermes user so the agent can clone private repos
+    if [ -n "${GITHUB_PAT:-}" ]; then
+        # Store PAT in git credential helper for HTTPS clone access
+        HERMES_GITCONFIG="$HERMES_HOME/.gitconfig"
+        if [ ! -f "$HERMES_GITCONFIG" ]; then
+            printf '[credential]\n\thelper = store\n[user]\n\tname = Hermes Agent\n\temail = hermes@tad.do\n[core]\n\tautocrlf = input\n' > "$HERMES_GITCONFIG"
+            # Write credential entry for GitHub
+            printf 'https://tadtaxiadvertising:%s@github.com\n' "$GITHUB_PAT" > "$HERMES_HOME/.git-credentials"
+            chown hermes:hermes "$HERMES_HOME/.gitconfig" "$HERMES_HOME/.git-credentials"
+            chmod 600 "$HERMES_HOME/.git-credentials"
+        fi
+    fi
+
     # Create runtime subdirectories owned by hermes
     mkdir -p \
         "$HERMES_HOME/cron" \
@@ -49,7 +73,8 @@ if [ "$(id -u)" = 0 ]; then
         "$HERMES_HOME/memories" \
         "$HERMES_HOME/skills" \
         "$HERMES_HOME/lazy-packages" \
-        "$HERMES_HOME/platforms/pairing"
+        "$HERMES_HOME/platforms/pairing" \
+        "$HERMES_HOME/cache"
     chown -R hermes:hermes \
         "$HERMES_HOME/cron" \
         "$HERMES_HOME/sessions" \
@@ -58,7 +83,8 @@ if [ "$(id -u)" = 0 ]; then
         "$HERMES_HOME/memories" \
         "$HERMES_HOME/skills" \
         "$HERMES_HOME/lazy-packages" \
-        "$HERMES_HOME/platforms/pairing" 2>/dev/null || true
+        "$HERMES_HOME/platforms/pairing" \
+        "$HERMES_HOME/cache" 2>/dev/null || true
 
     # Drop to hermes user via gosu (lightweight su-exec alternative)
     exec gosu hermes "$@"

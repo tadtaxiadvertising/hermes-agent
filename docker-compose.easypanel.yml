@@ -45,6 +45,10 @@ services:
       # - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
       # - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
       # - SLACK_APP_TOKEN=${SLACK_APP_TOKEN}
+      # --- Project access: GitHub PAT for private repo cloning ---
+      - GITHUB_PAT=${GITHUB_PAT:-}
+      # --- Web search: Firecrawl for web research tasks ---
+      # - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
     deploy:
       resources:
         limits:
