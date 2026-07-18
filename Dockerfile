@@ -79,6 +79,9 @@ RUN uv sync --frozen --no-install-project \
 # ---------- Source code ----------
 COPY . .
 
+# Ensure entrypoint script is executable (COPY strips host permissions)
+RUN chmod +x /opt/hermes/docker/easypanel-entrypoint.sh
+
 # Install hermes-agent as editable link (fast — deps already resolved above)
 RUN uv pip install --no-cache-dir --no-deps -e "." && \
     printf 'docker-easypanel\n' > /opt/hermes/.install_method
